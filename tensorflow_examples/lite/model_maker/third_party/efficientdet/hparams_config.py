@@ -396,6 +396,7 @@ lite_common_param = dict(
     stddev_rgb=128.0,
     act_type='relu6',
     fpn_weight_method='sum',
+    grad_checkpoint: True,
 )
 
 efficientdet_lite_param_dict = {
