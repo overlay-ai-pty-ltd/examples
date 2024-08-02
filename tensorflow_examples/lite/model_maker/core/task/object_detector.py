@@ -15,7 +15,7 @@
 
 import os
 import tempfile
-from typing import Dict, Optional, Tuple, TypeVar
+from typing import Dict, List, Optional, Tuple, TypeVar
 
 import tensorflow as tf
 from tensorflow_examples.lite.model_maker.core import compat
@@ -94,7 +94,8 @@ class ObjectDetector(custom_model.CustomModel):
             validation_data: Optional[
                 object_detector_dataloader.DataLoader] = None,
             epochs: Optional[int] = None,
-            batch_size: Optional[int] = None) -> tf.keras.Model:
+            batch_size: Optional[int] = None,
+            callbacks: Optional[List[tf.keras.callbacks.Callback]] = []) -> tf.keras.Model:
     """Feeds the training data for training."""
     if not self.model_spec.config.drop_remainder:
       raise ValueError('Must set `drop_remainder=True` during training. '
@@ -122,7 +123,7 @@ class ObjectDetector(custom_model.CustomModel):
           validation_data, batch_size, is_training=False)
       return self.model_spec.train(self.model, train_ds, steps_per_epoch,
                                    validation_ds, validation_steps, epochs,
-                                   batch_size, val_json_file)
+                                   batch_size, val_json_file, callbacks)
 
   def evaluate(self,
                data: object_detector_dataloader.DataLoader,
@@ -225,7 +226,9 @@ class ObjectDetector(custom_model.CustomModel):
              epochs: Optional[object_detector_dataloader.DataLoader] = None,
              batch_size: Optional[int] = None,
              train_whole_model: bool = False,
-             do_train: bool = True) -> T:
+             do_train: bool = True,
+             callbacks: Optional[List[tf.keras.callbacks.Callback]] = []
+             ) -> T:
     """Loads data and train the model for object detection.
 
     Args:
@@ -257,7 +260,7 @@ class ObjectDetector(custom_model.CustomModel):
 
     if do_train:
       tf.compat.v1.logging.info('Retraining the models...')
-      object_detector.train(train_data, validation_data, epochs, batch_size)
+      object_detector.train(train_data, validation_data, epochs, batch_size, callbacks)
     else:
       object_detector.create_model()
 
