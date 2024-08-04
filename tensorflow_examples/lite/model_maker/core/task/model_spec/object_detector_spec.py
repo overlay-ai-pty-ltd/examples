@@ -270,7 +270,7 @@ class EfficientDetModelSpec(object):
     callbacks = config_callbacks + callbacks
 
     print(f"Our callbacks are {callbacks}")
-    
+     
     model.fit(
         train_dataset,
         epochs=epochs,
