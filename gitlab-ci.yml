@@ -1,0 +1,38 @@
+variables:
+  IMAGE_NAME: "overlay-tflite-model-maker-worker"
+
+sast:
+  variables:
+    SEARCH_MAX_DEPTH: '10'
+  stage: test
+
+include:
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Dependency-Scanning.gitlab-ci.yml
+  - template: Security/Secret-Detection.gitlab-ci.yml
+
+Build and Deploy Image:
+  stage: deploy
+  image: docker:24.0.5
+  tags:
+    - saas-linux-large-amd64
+  services:
+    - docker:24.0.5-dind
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
+    FOLDER: ./
+    BRANCH: dev
+
+  before_script:
+    - docker login ${AZURE_ACR_SERVER} --username $AZURE_SP_USERNAME --password $AZURE_SP_PASSWORD
+    - echo "$CI_JOB_TOKEN" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
+  script:
+    - cd $FOLDER
+    - docker pull $IMAGE_NAME:$BRANCH-latest || true
+    - docker build --cache-from $IMAGE_NAME:$BRANCH-latest -f Dockerfile . -t ${AZURE_ACR_SERVER}/$IMAGE_NAME
+    - docker build --cache-from $IMAGE_NAME:$BRANCH-latest -f Dockerfile . -t ${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}/$IMAGE_NAME
+    - docker image tag  ${AZURE_ACR_SERVER}/$IMAGE_NAME ${AZURE_ACR_SERVER}/$IMAGE_NAME:$BRANCH-$CI_COMMIT_SHORT_SHA
+    - docker image tag ${AZURE_ACR_SERVER}/$IMAGE_NAME ${AZURE_ACR_SERVER}/$IMAGE_NAME:$BRANCH-latest
+    - docker image push --all-tags "${AZURE_ACR_SERVER}/$IMAGE_NAME"
+    - docker image push --all-tags "${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}/$IMAGE_NAME"
