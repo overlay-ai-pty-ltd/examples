@@ -1,4 +1,4 @@
-FROM python:3.8
+FROM tensorflow/tensorflow:2.13.0-gpu
 LABEL authors="overlayai"
 
 USER root
@@ -6,11 +6,11 @@ USER root
 RUN apt update && apt install git libusb-1.0-0 ffmpeg libsm6 libxext6 -y
 RUN export PATH="/usr/bin/git:$PATH"
 
-RUN git clone https://github.com/overlay-ai-pty-ltd/examples.git 
-
-USER 1001
+COPY ./tensorflow_examples ./tensorflow_examples
 
 RUN pip install pycocotools
 
 # install the patched model maker library
-RUN pip install examples/tensorflow_examples/lite/model_maker/pip_package
+RUN pip install ./tensorflow_examples/lite/model_maker/pip_package
+
+USER 1001
