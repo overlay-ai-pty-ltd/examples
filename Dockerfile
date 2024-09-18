@@ -3,7 +3,7 @@ LABEL authors="overlayai"
 
 USER root
 
-RUN apt update && apt install git libusb-1.0-0 ffmpeg libsm6 libxext6 -y
+RUN apt update && apt install git libusb-1.0-0 ffmpeg libsm6 libxext6 sudo -y
 RUN export PATH="/usr/bin/git:$PATH"
 
 COPY ./tensorflow_examples ./tensorflow_examples
