@@ -1,9 +1,21 @@
-FROM tensorflow/tensorflow:2.13.0-gpu
+# Python 3.9: pyjwt>=2.10 (via firebase-admin in Cluster-Worker) needs >=3.9,
+# and scann==1.2.6 only ships wheels up to cp39. The tensorflow/tensorflow
+# GPU images are 3.8 (<=2.13) or 3.11 (>=2.14), so start from CUDA directly.
+# scann==1.2.6 pins tensorflow 2.8.x, which pip installs below.
+FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu20.04
 LABEL authors="overlayai"
+
+ENV DEBIAN_FRONTEND=noninteractive LANG=C.UTF-8
 
 USER root
 
-RUN apt update && apt install git libusb-1.0-0 ffmpeg libsm6 libxext6 sudo -y
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      python3.9 python3.9-dev python3.9-distutils curl ca-certificates \
+      git libusb-1.0-0 ffmpeg libsm6 libxext6 sudo \
+ && ln -sf /usr/bin/python3.9 /usr/local/bin/python3 \
+ && ln -sf /usr/bin/python3.9 /usr/local/bin/python \
+ && curl -sS https://bootstrap.pypa.io/pip/3.9/get-pip.py | python3.9 \
+ && rm -rf /var/lib/apt/lists/*
 
 RUN export PATH="/usr/bin/git:$PATH"
 
